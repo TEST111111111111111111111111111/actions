@@ -15,6 +15,7 @@ jobs:
           script: |
             const pr = context.payload.pull_request;
             const jiraPrefix = /^TAADV-\d+\s/;  // Only allow TAADV-123 style
+            const failedCommits = [];
 
             // Validate PR title
             if (!jiraPrefix.test(pr.title)) {
