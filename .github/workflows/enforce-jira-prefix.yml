@@ -1,0 +1,49 @@
+name: Enforce JIRA Prefix on PRs
+
+on:
+  pull_request_target:
+    types: [opened, edited, reopened, synchronize]
+
+jobs:
+  validate-jira:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR title & commits for JIRA ID
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+            const jiraPrefix = /^TAADV-\d+\s/;  // Only allow TAADV-123 style
+
+            // Validate PR title
+            if (!jiraPrefix.test(pr.title)) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                body: "❌ PR title must start with a valid JIRA ID prefix like `TAADV-123 Some title`."
+              });
+              core.setFailed("Invalid PR title prefix");
+              return;
+            }
+
+            // Validate commits' messages
+            const commits = await github.rest.pulls.listCommits({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+            });
+
+            for (const commit of commits.data) {
+              if (!jiraPrefix.test(commit.commit.message)) {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pr.number,
+                  body: `❌ Commit ${commit.sha} message is missing a valid JIRA prefix like TAADV-123.`
+                });
+                core.setFailed("Invalid commit message prefix");
+                return;
+              }
+            }
