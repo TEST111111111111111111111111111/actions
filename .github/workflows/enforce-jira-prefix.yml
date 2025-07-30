@@ -23,7 +23,7 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: pr.number,
-                body: "❌ PR title must start with a valid JIRA ID prefix like `TAADV-123 Some title`."
+                body: "❌ PR title must start with a valid JIRA ID prefix like `TAADV-<number> <Title>`."
               });
               core.setFailed("Invalid PR title prefix");
               return;
@@ -44,7 +44,7 @@ jobs:
 
             if (failedCommits.length > 0) {
               const message = [
-                "❌ The following commit messages are missing a valid JIRA ID prefix (`TAADV-<number>`):",
+                "❌ The following commit messages are missing a valid JIRA ID prefix (`TAADV-<number> <Commit Message>`):",
                 ...failedCommits,
               ].join("\n");
 
