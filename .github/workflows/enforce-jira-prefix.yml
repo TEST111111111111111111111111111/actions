@@ -37,13 +37,22 @@ jobs:
 
             for (const commit of commits.data) {
               if (!jiraPrefix.test(commit.commit.message)) {
-                await github.rest.issues.createComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: pr.number,
-                  body: `❌ Commit ${commit.sha} message is missing a valid JIRA prefix like TAADV-123.`
-                });
-                core.setFailed("Invalid commit message prefix");
-                return;
+                failedCommits.push(`- \`${commit.sha.substring(0, 7)}\`: ${commit.commit.message}`);
               }
+            }
+
+            if (failedCommits.length > 0) {
+              const message = [
+                "❌ The following commit messages are missing a valid JIRA ID prefix (`TAADV-<number>`):",
+                ...failedCommits,
+              ].join("\n");
+
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                body: message
+              });
+
+              core.setFailed("One or more commits are missing JIRA ID prefixes.");
             }
