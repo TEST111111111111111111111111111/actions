@@ -38,7 +38,7 @@ jobs:
 
             for (const commit of commits.data) {
               if (!jiraPrefix.test(commit.commit.message)) {
-                failedCommits.push(`- \`${commit.sha}\`: ${commit.commit.message}`);
+                failedCommits.push(`- ${commit.sha} : ${commit.commit.message}`);
               }
             }
 
